@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 export const MainPage = () => {
   const [city, setCity] = useState('');
   const [goodCity, setGoodCity] = useState('');
   const [error, setError] = useState('');
+  const [jsonCity, setJsonCity] = useState()
   const cityRegex = /^[a-zA-Zа-яА-ЯіІїЇєЄґҐ\s-]+$/;
 
   const handleSearch = async () => {
@@ -24,6 +25,7 @@ export const MainPage = () => {
           }
 
           const data = await response.json();
+          setJsonCity(data);
         } catch (err) {
           setError('Не знайдено');
         }
@@ -71,6 +73,7 @@ export const MainPage = () => {
       </button>
       {error && <div className="div">{error}</div>}
       {goodCity && <div className="div">{goodCity}</div>}
+      {jsonCity &&  <div>{jsonCity}</div>}
     </div>
   );
 };
