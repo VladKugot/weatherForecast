@@ -11,8 +11,14 @@ export const MainPage = () => {
   const [city, setCity] = useState('');
   const [error, setError] = useState('');
   const [coords, setCoords] = useState<Coordinates | null>(null);
-  const [jsonCity, setJsonCity] = useState<cityFetch[]>();
+  const [jsonCity, setJsonCity] = useState<cityFetch[] | null>();
   const cityRegex = /^[a-zA-Zа-яА-ЯіІїЇєЄґҐ\s-'’`]+$/;
+
+  const [weather, setweather] = useState(false);
+
+  const handleSearchWeather = (lat:string, lon:string) => {
+    if (lat && lon) setweather(true);
+  };
 
   const handleLocate = async () => {
     if (!navigator.geolocation) {
@@ -25,6 +31,7 @@ export const MainPage = () => {
 
     navigator.geolocation.getCurrentPosition(
       async (position) => {
+        setError('');
         const lat = position.coords.latitude;
         const lon = position.coords.longitude;
         setCoords({
@@ -41,7 +48,7 @@ export const MainPage = () => {
             throw new Error('Network response was not ok');
           }
           const data = await response.json();
-          data.name = String(data.address.city); 
+          data.name = String(data.address.city);
           setJsonCity([data]);
         } catch (err) {
           setError('Не знайдено по координатах населений пункт');
@@ -74,6 +81,7 @@ export const MainPage = () => {
 
   const handleSearch = async () => {
     setError('');
+    setJsonCity(null);
     if (city) {
       if (!cityRegex.test(city)) {
         setError('Містить символи');
@@ -92,7 +100,8 @@ export const MainPage = () => {
             (el: cityFetch) =>
               el.type === 'town' ||
               el.type === 'city' ||
-              el.type === 'administrative',
+              el.type === 'administrative' ||
+              el.type === 'village',
           );
           if (filteredCities.length === 0) {
             setError('Населений пункт не знайдено');
@@ -175,9 +184,12 @@ export const MainPage = () => {
                     cursor-pointer ${
                       isMultiple ? 'p-4 border rounded-xl bg-white' : ''
                     }`}
+                    onClick={() => handleSearchWeather(el.lat, el.lon)}
                   >
                     {el.display_name} - {el.name} {el.lat}, {el.lon}
                     {isMultiple && `, ${el.type}`}
+
+                    {weather && <span>GOOD</span>}
                   </div>
                 );
               })}

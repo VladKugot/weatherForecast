@@ -18,7 +18,7 @@ export const CustomButton: React.FC<ButtonProps> = ({
         hover:bg-blue-600 hover:border-blue-600 hover:shadow-md
         focus:outline-none focus:ring-4 focus:ring-blue-500/20 active:scale-95
         disabled:opacity-50 disabled:cursor-not-allowed transition-all
-        duration-200 w-fit"
+        duration-200 w-full md:w-fit whitespace-nowrap"
     >
       {children}
     </button>
