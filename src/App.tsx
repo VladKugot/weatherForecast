@@ -9,8 +9,9 @@ function App() {
       <Header />
 
       <section
-        className="mx-15 box-border flex flex-1 items-center justify-between
-          rounded-2xl border border-blue-500 bg-blue-100 p-20"
+        className="box-border flex flex-1 flex-col md:flex-row justify-between
+          rounded-2xl border border-blue-500 bg-blue-100
+          p-4 sm:p-8 md:p-12 mx-4 sm:mx-8 md:mx-12"
       >
         <MainPage />
       </section>
