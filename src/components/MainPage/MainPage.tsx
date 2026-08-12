@@ -9,7 +9,6 @@ interface Coordinates {
 
 export const MainPage = () => {
   const [city, setCity] = useState('');
-  const [goodCity, setGoodCity] = useState('');
   const [error, setError] = useState('');
   const [coords, setCoords] = useState<Coordinates | null>(null);
   const [jsonCity, setJsonCity] = useState<cityFetch[]>();
@@ -78,11 +77,8 @@ export const MainPage = () => {
     if (city) {
       if (!cityRegex.test(city)) {
         setError('Містить символи');
-        setGoodCity('');
         setJsonCity([]);
       } else {
-        setGoodCity(city);
-
         try {
           const response = await fetch(
             `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city)}&format=json`,
