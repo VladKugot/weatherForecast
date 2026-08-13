@@ -9,7 +9,7 @@ export const Header = () => {
         Weather Forecast
       </h1>
 
-      <ul className="flex flex-row items-center gap-6 list-none m-0 p-0">
+      <ul className="flex flex-row items-center gap-3  sm:gap-6 list-none m-0 p-0">
         <li
           className="text-xs sm:text-base cursor-pointer text-slate-700 hover:text-blue-600
             font-medium transition-colors"
