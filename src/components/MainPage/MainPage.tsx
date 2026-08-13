@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import type { cityFetch } from '../utills/City';
 import { CustomButton } from '../Elements/button';
+import { searchCity, searchCityByCords } from './geoApi';
+import { getCurrentCoords } from './geolocation';
+import { useNavigate } from 'react-router-dom';
 
 interface Coordinates {
   lat: number;
@@ -8,106 +11,47 @@ interface Coordinates {
 }
 
 export const MainPage = () => {
-  const [city, setCity] = useState('');
+  const [city, setCity] = useState(
+    () => localStorage.getItem('cityInput') || '',
+  );
   const [error, setError] = useState('');
   const [coords, setCoords] = useState<Coordinates | null>(null);
   const [jsonCity, setJsonCity] = useState<cityFetch[] | null>();
   const cityRegex = /^[a-zA-Zа-яА-ЯіІїЇєЄґҐ\s-'’`]+$/;
+  const navigate = useNavigate();
 
-  const [weather, setweather] = useState(false);
-
-  const handleSearchWeather = (lat:string, lon:string) => {
-    if (lat && lon) setweather(true);
-  };
+  const handleSelectCity = (cityName: string, lat: string, lon: string) => {
+  navigate(`/weather?city=${encodeURIComponent(cityName)}&lat=${lat}&lon=${lon}`);
+};
 
   const handleLocate = async () => {
-    if (!navigator.geolocation) {
-      setError('Геолокація не підтримується вашим браузером');
-      return;
-    }
-
-    //setLoading(true);
     setError('');
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        setError('');
-        const lat = position.coords.latitude;
-        const lon = position.coords.longitude;
-        setCoords({
-          lat: lat,
-          lon: lon,
-        });
-
-        try {
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`,
-          );
-
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
-          }
-          const data = await response.json();
-          data.name = String(data.address.city);
-          setJsonCity([data]);
-        } catch (err) {
-          setError('Не знайдено по координатах населений пункт');
-        }
-        //setLoading(false);
-      },
-      (err) => {
-        switch (err.code) {
-          case err.PERMISSION_DENIED:
-            setError('Ви заборонили доступ до геолокації');
-            break;
-          case err.POSITION_UNAVAILABLE:
-            setError('Інформація про місцезнаходження недоступна');
-            break;
-          case err.TIMEOUT:
-            setError('Час очікування запиту минув');
-            break;
-          default:
-            setError('Сталася невідома помилка');
-        }
-        //setLoading(false);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0,
-      },
-    );
+    try {
+      const coords = await getCurrentCoords();
+      setCoords({ lat: coords.latitude, lon: coords.longitude });
+      const data = await searchCityByCords(coords.latitude, coords.longitude);
+      setJsonCity([data]);
+    } catch (err: any) {
+      setError(err.message || 'Не знайдено населений пункт по координатах');
+    }
   };
 
-  const handleSearch = async () => {
+  const handleSearchCityByInput = async () => {
     setError('');
     setJsonCity(null);
     if (city) {
+      localStorage.setItem('cityInput', city);
       if (!cityRegex.test(city)) {
         setError('Містить символи');
         setJsonCity([]);
       } else {
         try {
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city)}&format=json`,
-          );
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
-          }
-
-          const data = await response.json();
-          const filteredCities = data.filter(
-            (el: cityFetch) =>
-              el.type === 'town' ||
-              el.type === 'city' ||
-              el.type === 'administrative' ||
-              el.type === 'village',
-          );
-          if (filteredCities.length === 0) {
+          const filteredCities = searchCity(city);
+          if ((await filteredCities).length === 0) {
             setError('Населений пункт не знайдено');
             setJsonCity([]);
           } else {
-            setJsonCity(filteredCities);
+            setJsonCity(await filteredCities);
           }
         } catch (err) {
           setError('Не знайдено');
@@ -139,7 +83,7 @@ export const MainPage = () => {
             <input
               id="city-input"
               type="text"
-              placeholder="Наприклад: Київ"
+              placeholder= {city || "Наприклад: Київ"}
               onChange={(e) => setCity(e.target.value)}
               className="w-full px-4 py-2 rounded-xl border-2 border-amber-300
                 bg-white text-slate-800 placeholder-slate-400 outline-none
@@ -148,7 +92,7 @@ export const MainPage = () => {
             />
           </div>
 
-          <CustomButton onClick={() => handleSearch()}>
+          <CustomButton onClick={() => handleSearchCityByInput()}>
             Знайти місто
           </CustomButton>
         </div>
@@ -184,12 +128,10 @@ export const MainPage = () => {
                     cursor-pointer ${
                       isMultiple ? 'p-4 border rounded-xl bg-white' : ''
                     }`}
-                    onClick={() => handleSearchWeather(el.lat, el.lon)}
+                    onClick={() => handleSelectCity(el.name, el.lat, el.lon)}
                   >
                     {el.display_name} - {el.name} {el.lat}, {el.lon}
                     {isMultiple && `, ${el.type}`}
-
-                    {weather && <span>GOOD</span>}
                   </div>
                 );
               })}
