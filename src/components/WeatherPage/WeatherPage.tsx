@@ -3,9 +3,11 @@ import type { WeatherResponse } from '../utills/Weather';
 import { useSearchParams } from 'react-router-dom';
 import { weatherApi } from './weatherApi';
 import { CustomButton } from '../Elements/button';
+import { ListWithTemperature } from './ListWithTemperature';
 
 export const WeatherPage = () => {
   const [searchParams] = useSearchParams();
+  const [numberOfDays, setNumberOfDays] = useState<number>();
   const [error, setError] = useState('');
   const [weatherFetch, setWeatherFetch] = useState<WeatherResponse>();
   const cityName = searchParams.get('city');
@@ -40,7 +42,12 @@ export const WeatherPage = () => {
               className="text-2xl sm:text-4xl font-bold text-slate-900
                 tracking-tight"
             >
-              Погода у <span className="text-blue-600">{cityName}</span> зараз
+              Погода у{' '}
+              <span className="text-blue-600 font-extrabold">{cityName}</span>{' '}
+              зараз{' '}
+              <span className="text-blue-600 font-extrabold">
+                {Math.round(weatherFetch.current_weather.temperature)}°C
+              </span>
             </h1>
             <div
               className="flex justify-between items-center border-b
@@ -62,7 +69,7 @@ export const WeatherPage = () => {
           <div
             className="relative overflow-hidden bg-linear-to-br from-blue-600
               to-indigo-700 text-white p-6 sm:p-8 rounded-2xl shadow-xl
-              shadow-blue-500/10 border border-blue-400/20"
+              shadow-blue-500/10 border border-blue-400/20 select-none"
           >
             <div
               className="flex flex-col sm:flex-row sm:items-center
@@ -109,12 +116,15 @@ export const WeatherPage = () => {
                   >
                     Напрямок вітру
                   </span>
-                  <span className="text-lg sm:text-xl font-semibold mt-1">
-                    {weatherFetch.current_weather.winddirection}°
+                  <span
+                    className="flex gap-1 text-lg sm:text-xl font-semibold mt-1"
+                  >
                     <svg
                       className="w-6 h-6 text-blue-200 transition-transform
                         duration-500 ease-out"
-                      style={{ transform: `rotate(${weatherFetch.current_weather.winddirection}deg)` }}
+                      style={{
+                        transform: `rotate(${weatherFetch.current_weather.winddirection}deg)`,
+                      }}
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -126,6 +136,7 @@ export const WeatherPage = () => {
                         d="M12 19.5v-15m0 0l-5.25 5.25M12 4.5l5.25 5.25"
                       />
                     </svg>
+                    {weatherFetch.current_weather.winddirection}°
                   </span>
                 </div>
               </div>
@@ -136,10 +147,23 @@ export const WeatherPage = () => {
             className="flex flex-wrap items-center justify-center gap-3 sm:gap-4
               pt-2"
           >
-            <CustomButton>Прогноз на день</CustomButton>
-            <CustomButton>Прогноз на 3 дні</CustomButton>
-            <CustomButton>Прогноз на тиждень</CustomButton>
+            <CustomButton onClick={() => setNumberOfDays(1)}>
+              Прогноз на день
+            </CustomButton>
+            <CustomButton onClick={() => setNumberOfDays(3)}>
+              Прогноз на 3 дні
+            </CustomButton>
+            <CustomButton onClick={() => setNumberOfDays(7)}>
+              Прогноз на тиждень
+            </CustomButton>
           </div>
+
+          {numberOfDays && (
+            <ListWithTemperature
+              hourly={weatherFetch.hourly}
+              countDay={numberOfDays}
+            />
+          )}
         </>
       )}
 
